@@ -3,21 +3,31 @@
 Compiler = g++
 RELEASE_FLAGS = -O2 -Wall -DNDEBUG 
 DEBUG_FLAGS   = -g -O0 -Wall 
-RELEASE_EXEC  = echo_serv
-DEBUG_EXEC    = tcp-dbg
-SOURCES       = tcp.cpp
+
+CLIENT_EXEC  = echo_client
+SERVER_EXEC  = echo_serv
+
+CLIENT_SRC   = echo_client.cpp
+SERVER_SRC   = tcp.cpp
+
+BOOST = -lboost_program_options
 
 all: debug release
 
-debug: $(DEBUG_EXEC)
+$(CLIENT_EXEC): $(CLIENT_SRC)
+	$(Compiler) $(FLAGS) $(CLIENT_SRC) -o $(CLIENT_EXEC) $(BOOST)
 
-$(DEBUG_EXEC): $(SOURCES)
-	$(Compiler) $(DEBUG_FLAGS) $(SOURCES) -o $(DEBUG_EXEC)
+$(SERVER_EXEC): $(SERVER_SRC)
+	$(Compiler) $(FLAGS) $(SERVER_SRC) -o $(SERVER_EXEC) $(BOOST)
 
-release: $(RELEASE_EXEC)
+# Цель для отладочной сборки
+debug: FLAGS = $(DEBUG_FLAGS)
+debug: $(CLIENT_EXEC) $(SERVER_EXEC)
 
-$(RELEASE_EXEC): $(SOURCES)
-	$(Compiler) $(RELEASE_FLAGS) $(SOURCES) -o $(RELEASE_EXEC)
+# Цель для релизной сборки
+release: FLAGS = $(RELEASE_FLAGS)
+release: $(CLIENT_EXEC) $(SERVER_EXEC)
 
+# Очистка скомпилированных файлов
 clean:
-	rm -f $(RELEASE_EXEC) $(DEBUG_EXEC)
+	rm -f $(CLIENT_EXEC) $(SERVER_EXEC)
