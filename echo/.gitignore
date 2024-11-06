@@ -1,2 +1,3 @@
 echo_serv
-tcp-dbg
+echo_client
+server.log
