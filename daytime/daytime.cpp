@@ -64,7 +64,7 @@ int main(int argc, char** argv)
         srv_addr.sin_port = htons(port);
         srv_addr.sin_addr.s_addr = inet_addr(ip_address.c_str());
 
-        string MSG = "Hi, this is a client program, what time is it now n";
+        string MSG = "Hi, this is a client program, what time is it now \n";
 
         int rc =
             sendto(client_socket, MSG.c_str(), MSG.size(), 0, reinterpret_cast<sockaddr*>(&srv_addr), sizeof(srv_addr));
