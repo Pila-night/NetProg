@@ -1,15 +1,15 @@
 
-#include <boost/program_options.hpp>
 #include <arpa/inet.h>
+#include <boost/program_options.hpp>
 #include <iostream>
 #include <memory>
 #include <netinet/in.h>
 #include <stdexcept>
 #include <string>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
 using namespace std;
 namespace po = boost::program_options;
 
@@ -24,7 +24,8 @@ bool is_valid_port(int port) { return port > 0 && port <= 65535; }
 int main(int argc, char** argv)
 {
     po::options_description desc("Options");
-    desc.add_options()("help,h", "Вывести справку")("ip,i", po::value<string>()->default_value("172.16.40.1"),"IP-адрес")("port,p", po::value<int>()->default_value(13), "Порт");
+    desc.add_options()("help,h", "Вывести справку")("ip,i", po::value<string>()->default_value("172.16.40.1"),
+                                                    "IP-адрес")("port,p", po::value<int>()->default_value(13), "Порт");
 
     po::variables_map vm;
     try {
@@ -65,40 +66,38 @@ int main(int argc, char** argv)
 
         string MSG = "Hi, this is a client program, what time is it now n";
 
-    
-    int rc = sendto(client_socket, MSG.c_str(), MSG.size(), 0,
-                     reinterpret_cast<sockaddr*>(&srv_addr), sizeof(srv_addr));
-    
-    if (rc == -1) {
-        throw std::system_error(errno, std::generic_category(), "Ошибка отправки сообщения");
-    }
+        int rc =
+            sendto(client_socket, MSG.c_str(), MSG.size(), 0, reinterpret_cast<sockaddr*>(&srv_addr), sizeof(srv_addr));
 
-    int buflen = 1024;                              
-    std::unique_ptr<char[]> buf(new char[buflen]); 
-    sockaddr_in from_addr{};
-    socklen_t from_len = sizeof(from_addr);
-
-    rc = recvfrom(client_socket, buf.get(), buflen, 0,
-                   reinterpret_cast<sockaddr*>(&from_addr), &from_len);
-    
-    if (rc == -1) {
-        throw std::system_error(errno, std::generic_category(), "Ошибка получения сообщения");
-    }
-
-    std::string res(buf.get(), rc);                 // сохраняем массив в строку
-    if (rc == buflen) {                              // массив полон?
-        int tail_size;                              // да
-        ioctl(client_socket, FIONREAD, &tail_size); // узнаем остаток в буфере приема
-        if (tail_size > 0) {                         // остаток есть?
-            if (tail_size > buflen) // да, остаток больше размера массива?
-                // да, пересоздаем массив в размер остатка
-                buf = std::unique_ptr<char[]>(new char[tail_size]);
-            // нет, используем старый массив
-            rc = recvfrom(client_socket, buf.get(), tail_size, 0,
-                            reinterpret_cast<sockaddr*>(&from_addr), &from_len); // принять остаток
-            res.append(buf.get(), rc);                         // добавляем остаток в строку
+        if(rc == -1) {
+            throw std::system_error(errno, std::generic_category(), "Ошибка отправки сообщения");
         }
-    }
+
+        int buflen = 1024;
+        std::unique_ptr<char[]> buf(new char[buflen]);
+        sockaddr_in from_addr{};
+        socklen_t from_len = sizeof(from_addr);
+
+        rc = recvfrom(client_socket, buf.get(), buflen, 0, reinterpret_cast<sockaddr*>(&from_addr), &from_len);
+
+        if(rc == -1) {
+            throw std::system_error(errno, std::generic_category(), "Ошибка получения сообщения");
+        }
+
+        std::string res(buf.get(), rc);                 // сохраняем массив в строку
+        if(rc == buflen) {                              // массив полон?
+            int tail_size;                              // да
+            ioctl(client_socket, FIONREAD, &tail_size); // узнаем остаток в буфере приема
+            if(tail_size > 0) {                         // остаток есть?
+                if(tail_size > buflen) // да, остаток больше размера массива?
+                    // да, пересоздаем массив в размер остатка
+                    buf = std::unique_ptr<char[]>(new char[tail_size]);
+                // нет, используем старый массив
+                rc = recvfrom(client_socket, buf.get(), tail_size, 0, reinterpret_cast<sockaddr*>(&from_addr),
+                              &from_len);  // принять остаток
+                res.append(buf.get(), rc); // добавляем остаток в строку
+            }
+        }
         cout << "Время на сервере: " << res << endl;
 
         close(client_socket);
