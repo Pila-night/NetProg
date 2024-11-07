@@ -8,7 +8,7 @@ CLIENT_EXEC  = echo_client
 SERVER_EXEC  = echo_serv
 
 CLIENT_SRC   = echo_client.cpp
-SERVER_SRC   = tcp.cpp
+SERVER_SRC   = echo_server.cpp
 
 BOOST = -lboost_program_options
 
@@ -20,14 +20,12 @@ $(CLIENT_EXEC): $(CLIENT_SRC)
 $(SERVER_EXEC): $(SERVER_SRC)
 	$(Compiler) $(FLAGS) $(SERVER_SRC) -o $(SERVER_EXEC) $(BOOST)
 
-# Цель для отладочной сборки
+
 debug: FLAGS = $(DEBUG_FLAGS)
 debug: $(CLIENT_EXEC) $(SERVER_EXEC)
 
-# Цель для релизной сборки
 release: FLAGS = $(RELEASE_FLAGS)
 release: $(CLIENT_EXEC) $(SERVER_EXEC)
 
-# Очистка скомпилированных файлов
 clean:
 	rm -f $(CLIENT_EXEC) $(SERVER_EXEC)
